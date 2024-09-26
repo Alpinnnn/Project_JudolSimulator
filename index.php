@@ -9,9 +9,16 @@ if (isset($_SESSION['user_id'])) {
     $user = $stmt->fetch();
 }
 
+// Function to get leaderboard data
+function getLeaderboard($pdo, $type = 'balance', $limit = 10) {
+    $column = $type === 'xp' ? 'xp' : 'balance';
+    $stmt = $pdo->query("SELECT username, $column as score FROM user ORDER BY $column DESC LIMIT $limit");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 // Fetch leaderboard data
-$stmt = $pdo->query("SELECT username, balance FROM user ORDER BY balance DESC LIMIT 10");
-$leaderboard = $stmt->fetchAll();
+$balanceLeaderboard = getLeaderboard($pdo, 'balance');
+$xpLeaderboard = getLeaderboard($pdo, 'xp');
 ?>
 
 <!DOCTYPE html>
@@ -72,6 +79,41 @@ $leaderboard = $stmt->fetchAll();
                 color: #ffffff;
             }
         }
+
+        .leaderboard-modal {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .leaderboard-table {
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        .leaderboard-table tr {
+            background: rgba(30, 41, 59, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-table tr:hover {
+            transform: scale(1.02);
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        .leaderboard-table td, .leaderboard-table th {
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .leaderboard-table td:first-child, .leaderboard-table th:first-child {
+            border-top-left-radius: 0.5rem;
+            border-bottom-left-radius: 0.5rem;
+        }
+
+        .leaderboard-table td:last-child, .leaderboard-table th:last-child {
+            border-top-right-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
     </style>
     </style>
 </head>
@@ -120,7 +162,7 @@ $leaderboard = $stmt->fetchAll();
                                     <p class="text-sm leading-5 text-gray-300">Level: <?php echo floor($user['xp'] / 1000) + 1; ?></p>
                                 </div>
                                 <div class="py-1">
-                                    <a href="logout.php" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Logout</a>
+                                    <a href="accounts/logout.php" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">Logout</a>
                                 </div>
                             </div>
                         </div>
@@ -133,6 +175,61 @@ $leaderboard = $stmt->fetchAll();
             </div>
         </div>
     </nav>
+
+    <div id="leaderboardModal" class="modal">
+        <div class="modal-content leaderboard-modal w-full max-w-4xl">
+            <h2 class="text-3xl font-bold mb-6 text-center text-white">Leaderboard</h2>
+            <div class="mb-6 flex justify-center">
+                <button id="balanceLeaderboardBtn" class="px-6 py-2 bg-blue-600 text-white rounded-l-md focus:outline-none">Balance</button>
+                <button id="xpLeaderboardBtn" class="px-6 py-2 bg-gray-600 text-white rounded-r-md focus:outline-none">XP</button>
+            </div>
+            <div id="balanceLeaderboard">
+                <h3 class="text-2xl font-semibold mb-4 text-center text-white">Top 10 Balance</h3>
+                <table class="leaderboard-table w-full">
+                    <thead>
+                        <tr>
+                            <th class="text-white">Rank</th>
+                            <th class="text-white">Username</th>
+                            <th class="text-white">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($balanceLeaderboard as $index => $user): ?>
+                            <tr>
+                                <td class="text-white"><?php echo $index + 1; ?></td>
+                                <td class="text-white"><?php echo htmlspecialchars($user['username']); ?></td>
+                                <td class="text-white">$<?php echo number_format($user['score'], 2); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div id="xpLeaderboard" class="hidden">
+                <h3 class="text-2xl font-semibold mb-4 text-center text-white">Top 10 XP</h3>
+                <table class="leaderboard-table w-full">
+                    <thead>
+                        <tr>
+                            <th class="text-white">Rank</th>
+                            <th class="text-white">Username</th>
+                            <th class="text-white">XP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($xpLeaderboard as $index => $user): ?>
+                            <tr>
+                                <td class="text-white"><?php echo $index + 1; ?></td>
+                                <td class="text-white"><?php echo htmlspecialchars($user['username']); ?></td>
+                                <td class="text-white"><?php echo number_format($user['score']); ?> XP</td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <button id="closeLeaderboardModal" class="mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none">
+                Tutup
+            </button>
+        </div>
+    </div>
 
     <header class="container mx-auto text-center py-16">
         <h1 class="text-4xl font-bold mb-4">Selamat Datang di Simulasi Judi Online</h1>
@@ -218,6 +315,46 @@ $leaderboard = $stmt->fetchAll();
         window.addEventListener('click', (event) => {
             if (event.target == modal) {
                 modal.style.display = 'none';
+            }
+        });
+
+        const leaderboardModal = document.getElementById('leaderboardModal');
+        const leaderboardButton = document.getElementById('leaderboardButton');
+        const closeLeaderboardModal = document.getElementById('closeLeaderboardModal');
+        const balanceLeaderboardBtn = document.getElementById('balanceLeaderboardBtn');
+        const xpLeaderboardBtn = document.getElementById('xpLeaderboardBtn');
+        const balanceLeaderboard = document.getElementById('balanceLeaderboard');
+        const xpLeaderboard = document.getElementById('xpLeaderboard');
+
+        leaderboardButton.addEventListener('click', () => {
+            leaderboardModal.style.display = 'block';
+        });
+
+        closeLeaderboardModal.addEventListener('click', () => {
+            leaderboardModal.style.display = 'none';
+        });
+
+        balanceLeaderboardBtn.addEventListener('click', () => {
+            balanceLeaderboard.classList.remove('hidden');
+            xpLeaderboard.classList.add('hidden');
+            balanceLeaderboardBtn.classList.add('bg-blue-600');
+            balanceLeaderboardBtn.classList.remove('bg-gray-600');
+            xpLeaderboardBtn.classList.add('bg-gray-600');
+            xpLeaderboardBtn.classList.remove('bg-blue-600');
+        });
+
+        xpLeaderboardBtn.addEventListener('click', () => {
+            xpLeaderboard.classList.remove('hidden');
+            balanceLeaderboard.classList.add('hidden');
+            xpLeaderboardBtn.classList.add('bg-blue-600');
+            xpLeaderboardBtn.classList.remove('bg-gray-600');
+            balanceLeaderboardBtn.classList.add('bg-gray-600');
+            balanceLeaderboardBtn.classList.remove('bg-blue-600');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == leaderboardModal) {
+                leaderboardModal.style.display = 'none';
             }
         });
     </script>
