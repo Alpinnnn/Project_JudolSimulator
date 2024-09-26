@@ -4,13 +4,14 @@ require_once 'db_connect.php';
 
 $user = null;
 if (isset($_SESSION['user_id'])) {
-    $stmt = $pdo->prepare("SELECT * FROM user WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT u.*, r.name as role_name FROM user u JOIN role r ON u.role_id = r.id WHERE u.id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch();
 }
 
 // Function to get leaderboard data
-function getLeaderboard($pdo, $type = 'balance', $limit = 10) {
+function getLeaderboard($pdo, $type = 'balance', $limit = 10)
+{
     $column = $type === 'xp' ? 'xp' : 'balance';
     $stmt = $pdo->query("SELECT username, $column as score FROM user ORDER BY $column DESC LIMIT $limit");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -66,18 +67,20 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
             height: 100%;
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-            &-content {
-                background: rgba(30, 30, 30, 0.9);
-                backdrop-filter: blur(10px);
-                margin: 15% auto;
-                padding: 20px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                width: 80%;
-                max-width: 500px;
-                border-radius: 10px;
-                color: #ffffff;
-            }
+        .modal-content {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            margin: auto;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
         }
 
         .leaderboard-modal {
@@ -100,17 +103,20 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
             background: rgba(30, 41, 59, 0.9);
         }
 
-        .leaderboard-table td, .leaderboard-table th {
+        .leaderboard-table td,
+        .leaderboard-table th {
             padding: 1rem;
             text-align: left;
         }
 
-        .leaderboard-table td:first-child, .leaderboard-table th:first-child {
+        .leaderboard-table td:first-child,
+        .leaderboard-table th:first-child {
             border-top-left-radius: 0.5rem;
             border-bottom-left-radius: 0.5rem;
         }
 
-        .leaderboard-table td:last-child, .leaderboard-table th:last-child {
+        .leaderboard-table td:last-child,
+        .leaderboard-table th:last-child {
             border-top-right-radius: 0.5rem;
             border-bottom-right-radius: 0.5rem;
         }
@@ -170,6 +176,9 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
                     <?php else: ?>
                         <a href="accounts/login.php" class="px-3 py-2 rounded-md text-sm font-medium bg-gray-700 hover:bg-gray-600 text-white mb-2 lg:mb-0 lg:mr-2">Login</a>
                         <a href="accounts/register.php" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white">Register</a>
+                    <?php endif; ?>
+                    <?php if ($user && ($user['role_name'] === 'admin' || $user['role_name'] === 'moderator')): ?>
+                        <a href="admin/panel.php" class="px-3 py-2 rounded-md text-sm font-medium bg-red-600 hover:bg-red-500 text-white mb-2 lg:mb-0 lg:mr-2">Admin Panel</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -258,7 +267,7 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
         </div>
     </main>
 
-    <div id="alertModal" class="modal">
+    <div id="alertModal" class="modal" style="display: none;">
         <div class="modal-content">
             <h2 class="text-xl font-bold mb-4">Peringatan</h2>
             <p>Website ini hanya untuk hiburan dan edukasi, tidak ada data yang diambil berdasarkan dunia nyata.</p>
@@ -275,87 +284,127 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
     </div>
 
     <script>
-        // Responsive navbar
-        const menuToggle = document.getElementById('menuToggle');
-        const navMenu = document.getElementById('navMenu');
-        menuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('hidden');
-        });
-
-        // Games menu
-        const gamesButton = document.getElementById('gamesButton');
-        const gamesMenu = document.getElementById('gamesMenu');
-        gamesButton.addEventListener('click', () => {
-            gamesMenu.classList.toggle('hidden');
-        });
-
-        // Profile menu
-        const profileButton = document.getElementById('profileButton');
-        const profileMenu = document.getElementById('profileMenu');
-        profileButton.addEventListener('click', () => {
-            profileMenu.classList.toggle('hidden');
-        });
-
-        // Alert modal
-        const modal = document.getElementById('alertModal');
-        const closeModal = document.getElementById('closeModal');
-        const dontShowAgain = document.getElementById('dontShowAgain');
-
-        if (!localStorage.getItem('alertDismissed')) {
-            modal.style.display = 'block';
-        }
-
-        closeModal.addEventListener('click', () => {
-            modal.style.display = 'none';
-            if (dontShowAgain.checked) {
-                localStorage.setItem('alertDismissed', 'true');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fungsi untuk memeriksa apakah elemen ada sebelum menambahkan event listener
+            function addEventListenerIfElementExists(elementId, eventType, listener) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.addEventListener(eventType, listener);
+                }
             }
-        });
 
-        window.addEventListener('click', (event) => {
-            if (event.target == modal) {
-                modal.style.display = 'none';
+            // Modal peringatan
+            const modal = document.getElementById('alertModal');
+            const closeModal = document.getElementById('closeModal');
+            const dontShowAgain = document.getElementById('dontShowAgain');
+
+            // Fungsi untuk menampilkan modal
+            function showModal() {
+                if (modal) {
+                    modal.style.display = 'block';
+                }
             }
-        });
 
-        const leaderboardModal = document.getElementById('leaderboardModal');
-        const leaderboardButton = document.getElementById('leaderboardButton');
-        const closeLeaderboardModal = document.getElementById('closeLeaderboardModal');
-        const balanceLeaderboardBtn = document.getElementById('balanceLeaderboardBtn');
-        const xpLeaderboardBtn = document.getElementById('xpLeaderboardBtn');
-        const balanceLeaderboard = document.getElementById('balanceLeaderboard');
-        const xpLeaderboard = document.getElementById('xpLeaderboard');
-
-        leaderboardButton.addEventListener('click', () => {
-            leaderboardModal.style.display = 'block';
-        });
-
-        closeLeaderboardModal.addEventListener('click', () => {
-            leaderboardModal.style.display = 'none';
-        });
-
-        balanceLeaderboardBtn.addEventListener('click', () => {
-            balanceLeaderboard.classList.remove('hidden');
-            xpLeaderboard.classList.add('hidden');
-            balanceLeaderboardBtn.classList.add('bg-blue-600');
-            balanceLeaderboardBtn.classList.remove('bg-gray-600');
-            xpLeaderboardBtn.classList.add('bg-gray-600');
-            xpLeaderboardBtn.classList.remove('bg-blue-600');
-        });
-
-        xpLeaderboardBtn.addEventListener('click', () => {
-            xpLeaderboard.classList.remove('hidden');
-            balanceLeaderboard.classList.add('hidden');
-            xpLeaderboardBtn.classList.add('bg-blue-600');
-            xpLeaderboardBtn.classList.remove('bg-gray-600');
-            balanceLeaderboardBtn.classList.add('bg-gray-600');
-            balanceLeaderboardBtn.classList.remove('bg-blue-600');
-        });
-
-        window.addEventListener('click', (event) => {
-            if (event.target == leaderboardModal) {
-                leaderboardModal.style.display = 'none';
+            // Fungsi untuk menyembunyikan modal
+            function hideModal() {
+                if (modal) {
+                    modal.style.display = 'none';
+                    if (dontShowAgain && dontShowAgain.checked) {
+                        localStorage.setItem('alertDismissed', 'true');
+                    }
+                }
             }
+
+            // Cek apakah modal sudah pernah ditampilkan sebelumnya
+            if (!localStorage.getItem('alertDismissed')) {
+                showModal();
+            }
+
+            // Event listener untuk tombol tutup
+            if (closeModal) {
+                closeModal.addEventListener('click', hideModal);
+            }
+
+            // Event listener untuk klik di luar modal
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    hideModal();
+                }
+            });
+
+            // Responsive navbar
+            addEventListenerIfElementExists('menuToggle', 'click', () => {
+                const navMenu = document.getElementById('navMenu');
+                if (navMenu) {
+                    navMenu.classList.toggle('hidden');
+                }
+            });
+
+            // Games menu
+            addEventListenerIfElementExists('gamesButton', 'click', () => {
+                const gamesMenu = document.getElementById('gamesMenu');
+                if (gamesMenu) {
+                    gamesMenu.classList.toggle('hidden');
+                }
+            });
+
+            // Profile menu
+            addEventListenerIfElementExists('profileButton', 'click', () => {
+                const profileMenu = document.getElementById('profileMenu');
+                if (profileMenu) {
+                    profileMenu.classList.toggle('hidden');
+                }
+            });
+
+            // Leaderboard
+            const leaderboardModal = document.getElementById('leaderboardModal');
+            addEventListenerIfElementExists('leaderboardButton', 'click', () => {
+                if (leaderboardModal) {
+                    leaderboardModal.style.display = 'block';
+                }
+            });
+
+            addEventListenerIfElementExists('closeLeaderboardModal', 'click', () => {
+                if (leaderboardModal) {
+                    leaderboardModal.style.display = 'none';
+                }
+            });
+
+            addEventListenerIfElementExists('balanceLeaderboardBtn', 'click', () => {
+                const balanceLeaderboard = document.getElementById('balanceLeaderboard');
+                const xpLeaderboard = document.getElementById('xpLeaderboard');
+                const balanceLeaderboardBtn = document.getElementById('balanceLeaderboardBtn');
+                const xpLeaderboardBtn = document.getElementById('xpLeaderboardBtn');
+                if (balanceLeaderboard && xpLeaderboard && balanceLeaderboardBtn && xpLeaderboardBtn) {
+                    balanceLeaderboard.classList.remove('hidden');
+                    xpLeaderboard.classList.add('hidden');
+                    balanceLeaderboardBtn.classList.add('bg-blue-600');
+                    balanceLeaderboardBtn.classList.remove('bg-gray-600');
+                    xpLeaderboardBtn.classList.add('bg-gray-600');
+                    xpLeaderboardBtn.classList.remove('bg-blue-600');
+                }
+            });
+
+            addEventListenerIfElementExists('xpLeaderboardBtn', 'click', () => {
+                const balanceLeaderboard = document.getElementById('balanceLeaderboard');
+                const xpLeaderboard = document.getElementById('xpLeaderboard');
+                const balanceLeaderboardBtn = document.getElementById('balanceLeaderboardBtn');
+                const xpLeaderboardBtn = document.getElementById('xpLeaderboardBtn');
+                if (balanceLeaderboard && xpLeaderboard && balanceLeaderboardBtn && xpLeaderboardBtn) {
+                    xpLeaderboard.classList.remove('hidden');
+                    balanceLeaderboard.classList.add('hidden');
+                    xpLeaderboardBtn.classList.add('bg-blue-600');
+                    xpLeaderboardBtn.classList.remove('bg-gray-600');
+                    balanceLeaderboardBtn.classList.add('bg-gray-600');
+                    balanceLeaderboardBtn.classList.remove('bg-blue-600');
+                }
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == leaderboardModal) {
+                    leaderboardModal.style.display = 'none';
+                }
+            });
         });
     </script>
 </body>
