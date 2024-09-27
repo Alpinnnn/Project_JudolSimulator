@@ -410,3 +410,4 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
 </body>
 
 </html>
+<!-- Test -->
