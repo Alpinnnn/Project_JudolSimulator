@@ -408,3 +408,5 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
         });
     </script>
 </body>
+
+</html>

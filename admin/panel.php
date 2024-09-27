@@ -153,3 +153,4 @@ if (isset($_POST['edit_user']) && $user['role_name'] === 'admin') {
     </script>
 </body>
 </html>
+<!--  -->
