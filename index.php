@@ -120,6 +120,10 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
             border-top-right-radius: 0.5rem;
             border-bottom-right-radius: 0.5rem;
         }
+
+        #leaderboardModal {
+            display: none;
+        }
     </style>
     </style>
 </head>
@@ -248,8 +252,8 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
     <main class="container mx-auto py-8">
         <h2 class="text-2xl font-bold mb-4">Daftar Game</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <a href="/poker" class="glassmorphism card-game p-4 cursor-pointer">
-                <h3 class="text-lg font-semibold mb-2">Poker</h3>
+            <a href="games/guessthecard.php" class="glassmorphism card-game p-4 cursor-pointer">
+                <h3 class="text-lg font-semibold mb-2">Guess The Card</h3>
                 <p>Mainkan poker klasik dalam simulasi aman.</p>
             </a>
             <a href="/slot" class="glassmorphism card-game p-4 cursor-pointer">
