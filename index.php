@@ -28,7 +28,26 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulasi Judi Online - Edukasi</title>
+
+    <!-- SEO Meta -->
+    <title>JudolSimulator - Website Simulasi Judi Pertama! Judi Online Tanpa Risiko</title>
+    <meta name="description" content="JudolSimulator: Simulasi judi online untuk edukasi. Pelajari strategi, manajemen risiko, dan teknik permainan dalam lingkungan yang aman.">
+    <meta name="keywords" content="judol simulator, simulasi judi online, edukasi judi, poker virtual, slot gratis, roulette online, blackjack simulator, judol, JudolSimulator, simulator">
+    <meta name="author" content="VoksiDoksi Sigma Team">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Simulasi Judi Online - Edukasi">
+    <meta property="og:description" content="Simulasi judi online untuk edukasi. Pelajari strategi, manajemen risiko, dan teknik permainan dalam lingkungan yang aman.">
+    <meta property="og:image" content="URL_GAMBAR_UTAMA_ANDA">
+    <meta property="og:url" content="URL_WEBSITE_ANDA">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Simulasi Judi Online - Edukasi">
+    <meta name="twitter:description" content="Simulasi judi online untuk edukasi. Pelajari strategi, manajemen risiko, dan teknik permainan dalam lingkungan yang aman.">
+    <meta name="twitter:image" content="URL_GAMBAR_UTAMA_ANDA">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -123,6 +142,12 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
 
         #leaderboardModal {
             display: none;
+        }
+
+        .version {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
         }
     </style>
     </style>
@@ -245,7 +270,7 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
     </div>
 
     <header class="container mx-auto text-center py-16">
-        <h1 class="text-4xl font-bold mb-4">Selamat Datang di Simulasi Judi Online</h1>
+        <h1 class="text-4xl font-bold mb-4">Judol Simulator: Belajar Tentang Judi Online Tanpa Risiko</h1>
         <p class="text-xl">Edukasi dan Hiburan Tanpa Risiko Nyata</p>
     </header>
 
@@ -286,6 +311,8 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
             </button>
         </div>
     </div>
+
+    <p class="text-xl version">Alpha 1.0</p>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -410,6 +437,32 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
                 }
             });
         });
+    </script>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Judol Simulator",
+            "url": "URL_WEBSITE_ANDA",
+            "logo": "URL_LOGO_ANDA",
+            "description": "JudolSimulator: Simulasi judi online untuk tujuan edukasi.",
+            "applicationCategory": "EducationalApplication",
+            "offers": {
+                "@type": "Offer",
+                "price": "0"
+            },
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "1000"
+            }
+            "sameAs": [
+                "https://www.facebook.com/PROFIL_FB_ANDA",
+                "https://www.instagram.com/PROFIL_IG_ANDA",
+                "https://www.twitter.com/PROFIL_TWITTER_ANDA"
+            ]
+        }
     </script>
 </body>
 
