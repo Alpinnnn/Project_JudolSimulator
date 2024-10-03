@@ -156,14 +156,8 @@ if (isset($_POST['auto_spin_action'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choose The Card - Judol Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="includes/style.css">
     <style>
-        body {
-            background-color: #121212;
-            color: #ffffff;
-            background-image: url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-            background-attachment: fixed;
-            background-size: cover;
-        }
 
         .glassmorphism {
             background: rgba(255, 255, 255, 0.05);
@@ -259,17 +253,15 @@ if (isset($_POST['auto_spin_action'])) {
 </head>
 
 <body class="min-h-screen">
+<?php
+    include '../includes/navbar.php';
+    ?>
     <div class="container mx-auto py-8 px-4">
         <h1 class="text-4xl font-bold mb-8 text-center">Guess The Card</h1>
 
         <?php if ($message): ?>
             <div class="bg-red-500 text-white p-4 mb-4 rounded"><?php echo $message; ?></div>
         <?php endif; ?>
-
-        <div class="mb-4 glassmorphism p-4">
-            <p>Balance: $<?php echo number_format($user['balance'], 2); ?></p>
-            <p>XP: <?php echo $user['xp']; ?></p>
-        </div>
 
         <?php if ($gameState === 'bet'): ?>
             <form method="POST" class="mb-4 glassmorphism p-4">
@@ -322,9 +314,9 @@ if (isset($_POST['auto_spin_action'])) {
             </form>
         <?php elseif ($gameState === 'play'): ?>
             <div class="mb-4 glassmorphism p-4 play-phase">
-                <h2 class="text-2xl font-bold mb-2">Kartu Terpilih:</h2>
+                <h2 class="text-2xl font-bold mb-2">Kartu Acak:</h2>
                 <div class="flex flex-wrap justify-center gap-2 mb-4">
-                    <?php foreach ($selectedCards as $card): ?>
+                    <?php foreach ($drawnCards as $card): ?>
                         <div class="card" data-card="<?php echo $card; ?>" onclick="flipCard(this)">
                             <div class="card-inner">
                                 <div class="card-front">?</div>
@@ -333,6 +325,19 @@ if (isset($_POST['auto_spin_action'])) {
                         </div>
                     <?php endforeach; ?>
                 </div>
+
+                <h2 class="text-2xl font-bold mb-2 mt-4">Kartu Terpilih:</h2>
+                <div class="flex flex-wrap justify-center gap-2 mb-4">
+                    <?php foreach ($selectedCards as $card): ?>
+                        <div class="card selected" data-card="<?php echo $card; ?>">
+                            <div class="card-inner">
+                                <div class="card-front"><?php echo $card; ?></div>
+                                <div class="card-back"><?php echo $card; ?></div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
                 <p>Total Taruhan: $<?php echo number_format($totalBet, 2); ?></p>
                 <button id="revealAllBtn" class="bg-blue-500 text-white px-4 py-2 rounded mt-4 w-full sm:w-auto">Buka Semua Kartu</button>
                 <div id="resultContainer" class="mt-4 hidden">
@@ -341,6 +346,8 @@ if (isset($_POST['auto_spin_action'])) {
                 </div>
                 <div id="autoSpinInfo" class="mt-4 <?php echo $isAutoSpin ? '' : 'hidden'; ?>">
                     <p>Sisa Auto Spin: <span id="remainingAutoSpins"><?php echo $autoSpinCount; ?></span></p>
+                    <button id="restartAutoSpinBtn" class="bg-green-500 text-white px-4 py-2 rounded mt-4 w-full sm:w-auto">Restart Auto Spin</button>
+
                 </div>
             </div>
             <a href="guessthecard.php" id="playAgainBtn" class="bg-blue-500 text-white px-4 py-2 rounded block text-center w-full sm:w-auto <?php echo $isAutoSpin ? 'hidden' : ''; ?>">Main Lagi</a>
@@ -348,6 +355,9 @@ if (isset($_POST['auto_spin_action'])) {
     </div>
 
     <script>
+        let autoSpinCount = <?php echo $autoSpinCount; ?>;
+        let initialAutoSpinCount = autoSpinCount;
+
         let selectedCards = <?php echo json_encode($selectedCards ?? []); ?>;
         let drawnCards = <?php echo json_encode($drawnCards ?? []); ?>;
         let winnings = <?php echo $winnings ?? 0; ?>;
@@ -355,13 +365,10 @@ if (isset($_POST['auto_spin_action'])) {
         let revealedCount = 0;
         let gameState = '<?php echo $gameState; ?>';
         let isAutoSpin = <?php echo $isAutoSpin ? 'true' : 'false'; ?>;
-        let autoSpinCount = <?php echo $autoSpinCount; ?>;
         let betPerCard = <?php echo $betPerCard ?? 0; ?>;
 
-        // Variabel untuk melacak total keseluruhan
         let totalOverallBet = 0;
         let totalOverallWinnings = 0;
-        let initialAutoSpinCount = autoSpinCount;
 
         function toggleSelectCard(element) {
             if (gameState === 'select_cards') {
@@ -420,6 +427,11 @@ if (isset($_POST['auto_spin_action'])) {
 
         function startNewGame() {
             if (autoSpinCount > 0) {
+                // Reset total kemenangan dan taruhan untuk putaran baru
+                totalOverallBet = 0;
+                totalOverallWinnings = 0;
+                updateTotalDisplay();
+
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', 'guessthecard.php', true);
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -449,10 +461,6 @@ if (isset($_POST['auto_spin_action'])) {
                     '&selected_cards=' + JSON.stringify(selectedCards));
             } else {
                 document.getElementById('playAgainBtn').classList.remove('hidden');
-                // Reset total keseluruhan saat auto spin selesai
-                totalOverallBet = 0;
-                totalOverallWinnings = 0;
-                updateTotalDisplay();
             }
         }
 
@@ -576,6 +584,19 @@ if (isset($_POST['auto_spin_action'])) {
             }
         }
 
+        function restartAutoSpin() {
+            autoSpinCount = initialAutoSpinCount;
+            document.getElementById('remainingAutoSpins').textContent = autoSpinCount;
+
+            // Reset total keseluruhan
+            totalOverallBet = 0;
+            totalOverallWinnings = 0;
+            updateTotalDisplay();
+
+            // Mulai putaran baru
+            startNewGame();
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const revealAllBtn = document.getElementById('revealAllBtn');
             if (revealAllBtn) {
@@ -679,6 +700,11 @@ if (isset($_POST['auto_spin_action'])) {
                 `;
             }
             updateTotalDisplay();
+
+            const restartAutoSpinBtn = document.getElementById('restartAutoSpinBtn');
+            if (restartAutoSpinBtn) {
+                restartAutoSpinBtn.addEventListener('click', restartAutoSpin);
+            }
 
             initializeGame();
         });
