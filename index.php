@@ -67,8 +67,8 @@ require_once 'db_connect.php';
                 <h3 class="text-lg font-semibold mb-2">Guess The Card</h3>
                 <p>Mainkan poker klasik dalam simulasi aman.</p>
             </a>
-            <a href="/slot" class="glassmorphism card-game p-4 cursor-pointer">
-                <h3 class="text-lg font-semibold mb-2">Slot</h3>
+            <a href="games/plinko.php" class="glassmorphism card-game p-4 cursor-pointer">
+                <h3 class="text-lg font-semibold mb-2">Plinko</h3>
                 <p>Putar slot virtual tanpa risiko kehilangan uang sungguhan.</p>
             </a>
             <a href="/roulette" class="glassmorphism card-game p-4 cursor-pointer">

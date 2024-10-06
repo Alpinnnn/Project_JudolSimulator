@@ -29,11 +29,11 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
     }
 
     .glassmorphism {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
     .modal {
         display: none;
@@ -151,7 +151,7 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
                             </div>
                         </div>
                     </div>
-                    <span class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm">$<?php echo number_format($user['balance'], 2); ?></span>
+                    <span id="userBalance" class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm">$<?php echo number_format($user['balance'], 2); ?></span>
                 <?php else: ?>
                     <a href="accounts/login.php" class="px-3 py-2 rounded-md text-sm font-medium bg-gray-700 hover:bg-gray-600 text-white mb-2 lg:mb-0 lg:mr-2">Login</a>
                     <a href="accounts/register.php" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white">Register</a>
@@ -303,4 +303,25 @@ $xpLeaderboard = getLeaderboard($pdo, 'xp');
             }
         });
     });
+
+    // Fungsi untuk memperbarui saldo
+    function updateBalance() {
+        fetch('../api/get_balance.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.balance !== undefined) {
+                    const balanceElement = document.getElementById('userBalance');
+                    if (balanceElement) {
+                        balanceElement.textContent = '$' + parseFloat(data.balance).toFixed(2);
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Perbarui saldo setiap 5 detik
+    setInterval(updateBalance, 5000);
+
+    // Perbarui saldo segera setelah halaman dimuat
+    document.addEventListener('DOMContentLoaded', updateBalance);
 </script>
